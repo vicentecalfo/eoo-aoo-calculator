@@ -1,4 +1,4 @@
-const sppData = require('./data/test/3.json')
+const sppData = require('./data/test/5.json')
 const turf = require('@turf/turf')
 const _ = require("underscore")
 
@@ -26,19 +26,11 @@ function EOOCalculator({ data, localeFormat }) {
         areaInSquareMeters = turf.area(convexHull)
     }
     const areaInSquareKm = turf.convertArea(areaInSquareMeters, 'meters', 'kilometers')
-    let category = 'CR'
-    if(areaInSquareKm >= 20000){
-        category = 'LC'
-    }else if(areaInSquareKm <= 19999 && areaInSquareKm >= 5000 ){
-        category = 'VU'
-    }else if(areaInSquareKm <= 4999 && areaInSquareKm >= 100){
-        category = 'EN'
-    }
     return {
         value: areaInSquareKm,
         formatedValue: areaInSquareKm.toLocaleString(localeFormat),
         totalPoints: pointsCoords.length,
-        category
+        category: categoryClassification({type:'eoo', area:areaInSquareKm})
     }
 
 }
@@ -68,21 +60,37 @@ function AOOCalculator({ data, radiusInKm, localeFormat }) {
     })
     pointsFounded = _.uniq(pointsFounded).length
     const calculatedArea = pointsFounded * (bufferRadius * bufferRadius)
-    let category = 'CR'
-    if(calculatedArea >= 2000){
-        category = 'LC'
-    }else if(calculatedArea <= 1999 && calculatedArea >= 500 ){
-        category = 'VU'
-    }else if(calculatedArea <= 499 && calculatedArea >= 10){
-        category = 'EN'
-    }
     return {
         value: calculatedArea,
         formatedValue: calculatedArea.toLocaleString(localeFormat),
         totalPoints: pointsOnlyCoords.length,
         totalUsedPoints: pointsFounded,
-        category
+        category: categoryClassification({type:'aoo', area: calculatedArea})
     }
+}
+
+function categoryClassification({type, area}){
+    const range = {
+        eoo:{
+            lc: 20000,
+            vu: [19999,5000],
+            en: [4999,100]
+        },
+        aoo:{
+            lc: 2000,
+            vu: [1999,500],
+            en: [499,10]
+        }
+    }
+    let category = 'CR'
+    if(area >= range[type].lc){
+        category = 'LC'
+    }else if(area <=  range[type].vu[0] && area >= range[type].vu[1] ){
+        category = 'VU'
+    }else if(area <= range[type].en[0] && area >= range[type].en[0]){
+        category = 'EN'
+    }
+    return category
 }
 
 
