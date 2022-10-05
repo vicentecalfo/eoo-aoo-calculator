@@ -50,12 +50,12 @@ function AOOCalculator({ data, radiusInKm, localeFormat }) {
             return point
         })
     )
-    fs.writeFileSync(`./data/test/point-${testNumber}.json`, JSON.stringify(pointsCoords, null,2))
+    fs.writeFileSync(`./data/test/point-${testNumber}.json`, JSON.stringify(pointsCoords))
     bufferedPointsCoords = turf.featureCollection(bufferedPointsCoords)
     const convexHull = turf.convex(bufferedPointsCoords)
     const bbox = turf.bbox(convexHull)
     const squareGrid = turf.squareGrid(bbox, bufferRadius);
-    fs.writeFileSync(`./data/test/grid-${testNumber}.json`, JSON.stringify(squareGrid, null, 2))
+    fs.writeFileSync(`./data/test/grid-${testNumber}.json`, JSON.stringify(squareGrid))
     const collected = turf.collect(squareGrid, pointsCoords, 'weight', 'value');
     const squareGridCounted = collected.features.filter(grid => grid.properties.value.length > 0).length
     const calculatedArea = squareGridCounted * (bufferRadius * bufferRadius)
