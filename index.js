@@ -1,4 +1,4 @@
-const sppData = require('./data/test/3.json')
+const sppData = require('./data/test/2.json')
 const turf = require('@turf/turf')
 const _ = require("underscore")
 
@@ -37,34 +37,30 @@ function EOOCalculator({ data, localeFormat }) {
 
 function AOOCalculator({ data, radiusInKm, localeFormat }) {
     const bufferRadius = Number(radiusInKm)
-    const pointsOnlyCoords = data.map(({ latitude, longitude }) => [Number(longitude), Number(latitude)])
-    const pointsCoords = pointsOnlyCoords.map(coords =>turf.point(coords))
-    const gridPerPoint = pointsCoords.map(coord => {
-        const bufferPolygon = turf.buffer(coord, bufferRadius * 1000, { units: 'meters' })
-        const bbox = turf.bbox(bufferPolygon)
-        const bboxPolygon = turf.bboxPolygon(bbox)
-        return bboxPolygon
-    })
-    let pointsFounded = []
-    const pointsToSearch = []
-    pointsOnlyCoords.forEach(coords => pointsToSearch.push(coords))
-    const searchForThisPoints = turf.points(pointsToSearch)
-    gridPerPoint.forEach((grid) => {
-        const pointsInsideGridFounded = turf.pointsWithinPolygon(searchForThisPoints, grid)
-        if (pointsInsideGridFounded.features.length > 0) {
-            const stringfyFoundPoints = pointsInsideGridFounded.features.map(item => item.geometry.coordinates.join('_')).join('*');
-            pointsInsideGridFounded.features.forEach(coordFounded => {
-                pointsFounded.push(stringfyFoundPoints)
-            })
-        }
-    })
-    pointsFounded = _.uniq(pointsFounded).length
-    const calculatedArea = pointsFounded * (bufferRadius * bufferRadius)
+    let bufferedPointsCoords = []
+    let pointsOnlyCoords = []
+    const pointsCoords = turf.featureCollection(
+        data.map(({ latitude, longitude }) =>  {
+            const point = turf.point([longitude, latitude],{weight:1})
+            const bufferedPoint =  turf.buffer(point, bufferRadius * 1000, { units: 'meters' })
+            bufferedPointsCoords.push(bufferedPoint)
+            pointsOnlyCoords.push([longitude, latitude])
+            return point
+        })
+    )
+    bufferedPointsCoords = turf.featureCollection(bufferedPointsCoords)
+    const convexHull = turf.convex(bufferedPointsCoords)
+    const bbox = turf.bbox(convexHull)
+    const squareGrid = turf.squareGrid(bbox, bufferRadius);
+    const collected = turf.collect(squareGrid, pointsCoords, 'weight', 'value');
+    const squareGridCounted = collected.features.filter(grid => grid.properties.value.length > 0).length
+    const calculatedArea = squareGridCounted * (bufferRadius * bufferRadius)
+
     return {
         value: calculatedArea,
         formatedValue: calculatedArea.toLocaleString(localeFormat),
         totalPoints: pointsOnlyCoords.length,
-        totalUsedPoints: pointsFounded,
+        totalUsedPoints: squareGridCounted,
         category: categoryClassification({type:'aoo', area: calculatedArea})
     }
 }
