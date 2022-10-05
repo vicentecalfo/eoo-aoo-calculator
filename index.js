@@ -1,6 +1,7 @@
-const sppData = require('./data/test/2.json')
+const sppData = require('./data/test/8.json')
 const turf = require('@turf/turf')
 const _ = require("underscore")
+const fs = require('fs')
 
 
 const eoo = EOOCalculator({ data: sppData, localeFormat: 'en-US' })
@@ -39,19 +40,21 @@ function AOOCalculator({ data, radiusInKm, localeFormat }) {
     const bufferRadius = Number(radiusInKm)
     let bufferedPointsCoords = []
     let pointsOnlyCoords = []
-    const pointsCoords = turf.featureCollection(
+    let pointsCoords = turf.featureCollection(
         data.map(({ latitude, longitude }) =>  {
             const point = turf.point([longitude, latitude],{weight:1})
-            const bufferedPoint =  turf.buffer(point, bufferRadius * 1000, { units: 'meters' })
+            const bufferedPoint =  turf.buffer(point, bufferRadius, { units: 'kilometers', steps:3 })
             bufferedPointsCoords.push(bufferedPoint)
             pointsOnlyCoords.push([longitude, latitude])
             return point
         })
     )
+    fs.writeFileSync('./data/geo-json/points.json', JSON.stringify(pointsCoords, null,2))
     bufferedPointsCoords = turf.featureCollection(bufferedPointsCoords)
     const convexHull = turf.convex(bufferedPointsCoords)
     const bbox = turf.bbox(convexHull)
     const squareGrid = turf.squareGrid(bbox, bufferRadius);
+    fs.writeFileSync('./data/geo-json/grid.json', JSON.stringify(squareGrid, null, 2))
     const collected = turf.collect(squareGrid, pointsCoords, 'weight', 'value');
     const squareGridCounted = collected.features.filter(grid => grid.properties.value.length > 0).length
     const calculatedArea = squareGridCounted * (bufferRadius * bufferRadius)
