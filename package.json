@@ -7,6 +7,9 @@
   "publishConfig": {
     "access": "public"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "ts-node-dev src/index.ts"
@@ -32,7 +35,8 @@
   "license": "ISC",
   "dependencies": {
     "@turf/turf": "^6.5.0",
-    "underscore": "^1.13.6"
+    "underscore": "^1.13.6",
+    "user": "^0.0.0"
   },
   "devDependencies": {
     "@types/node": "^18.8.2",
