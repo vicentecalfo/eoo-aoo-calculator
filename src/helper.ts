@@ -1,32 +1,33 @@
 import * as turf from '@turf/turf'
 
-export interface ILongLat {
+export interface IOccurrenceRow {
     longitude: number
     latitude: number
+    binomial?: string
 }
 
 export interface ICoordinatesInput {
-    coordinates: ILongLat[]
+    coordinates: IOccurrenceRow[]
 }
 
 export interface ICoordinatesOutput {
     array: number[][]
-    object: ILongLat[]
+    object: IOccurrenceRow[]
 }
 
 
 export class Helper {
     constructor() { }
 
-    public formatMyCoordinatesToObject(coordinates: number[][]): ILongLat[] {
+    public formatMyCoordinatesToObject(coordinates: number[][]): IOccurrenceRow[] {
         return coordinates.map((coords: number[]) => ({
-            longitude: coords[0],
-            latitude: coords[1]
+            longitude: Number(coords[0]),
+            latitude: Number(coords[1])
         }))
     }
 
-    public formatMyCoordinatesToArray(coordinates: ILongLat[]): number[][] {
-        return coordinates.map(({ longitude, latitude }) => ([longitude, latitude]))
+    public formatMyCoordinatesToArray(coordinates: IOccurrenceRow[]): number[][] {
+        return coordinates.map(({ longitude, latitude }) => ([Number(longitude), Number(latitude)]))
     }
 
     public cleanCoordinates({ coordinates }: ICoordinatesInput): ICoordinatesOutput {
@@ -37,5 +38,10 @@ export class Helper {
             array: sanitizedCoords,
             object: this.formatMyCoordinatesToObject(sanitizedCoords)
         }
+    }
+
+    public getBinomial(occurence: IOccurrenceRow) {
+        const binomialInformed = occurence.hasOwnProperty('binomial')
+        return binomialInformed ? occurence.binomial : null
     }
 }

@@ -28,7 +28,7 @@ export interface IAooOccupiedGridInput {
 
 export class AOO {
     private helper = new Helper()
-    constructor(private input: ICoordinatesInput) {}
+    constructor(private input: ICoordinatesInput) { }
 
     public calculate({ gridWidthInKm }: IAoo) {
         const startTime = Date.now()
@@ -40,7 +40,7 @@ export class AOO {
             bufferRadiusUnit: 'kilometers',
             counterKey: 'presence'
         })
-        const bbox =  this._createBbox(coordinatesPoints.bufferedPointCollection)
+        const bbox = this._createBbox(coordinatesPoints.bufferedPointCollection)
         const countOccupiedGrids = this._getOccupiedGrids({
             bbox,
             pointCollection: coordinatesPoints.pointCollection,
@@ -49,7 +49,7 @@ export class AOO {
         })
         const totalOccupiedGrids = countOccupiedGrids.totalFoundGrids
         const areaInSquareKm = totalOccupiedGrids * (gridWidthInKm * gridWidthInKm)
-        const executionTimeInSeconds = (Date.now() - startTime)/1000
+        const executionTimeInSeconds = (Date.now() - startTime) / 1000
         return {
             areaInSquareKm,
             occupiedGrids: countOccupiedGrids.foundGrids,
@@ -59,7 +59,8 @@ export class AOO {
             totalPoints,
             totalRedundantPoints: totalPoints - cleanedCoordinates.array.length,
             usedPointCollection: coordinatesPoints.pointCollection,
-            executionTimeInSeconds
+            executionTimeInSeconds,
+            binomial: this.helper.getBinomial(this.input.coordinates[0])
         }
     }
 
@@ -79,10 +80,10 @@ export class AOO {
         return { points, pointCollection, bufferedPoints, bufferedPointCollection, counterKey }
     }
 
-    private _createBbox(pointCollection: 
-            turf.helpers.FeatureCollection<turf.helpers.Point, any> | 
-            turf.helpers.FeatureCollection<turf.helpers.Polygon, any>
-        ){
+    private _createBbox(pointCollection:
+        turf.helpers.FeatureCollection<turf.helpers.Point, any> |
+        turf.helpers.FeatureCollection<turf.helpers.Polygon, any>
+    ) {
         const convexHull = turf.convex(pointCollection)
         const bbox = turf.bbox(convexHull)
         return bbox
