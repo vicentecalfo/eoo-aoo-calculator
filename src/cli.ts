@@ -355,6 +355,10 @@ function _buildViewer({ content, type, outputResultDir, verbose }: any) {
             integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
         <script src="https://unpkg.com/leaflet@1.9.2/dist/leaflet.js"
             integrity="sha256-o9N1jGDZrf5tS+Ft4gbIK7mYMipq9lqpVJ91xHSyKhg=" crossorigin=""></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.3.2/leaflet.draw.css"/>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.3.2/leaflet.draw.js"></script>
+        <link rel="stylesheet" href="http://makinacorpus.github.io/Leaflet.MeasureControl/leaflet.measurecontrol.css" />
+        <script src="http://makinacorpus.github.io/Leaflet.MeasureControl/leaflet.measurecontrol.js"></script>
         <script>
             init()
             function init() {
@@ -379,6 +383,8 @@ function _buildViewer({ content, type, outputResultDir, verbose }: any) {
                 const overlays = {}
                 const control = L.control.layers(baseLayers, overlays).addTo(map)
 
+                L.Control.measureControl().addTo(map)
+
                 ${type === 'eoo' ? `eooLayers(map, control)` : `aooLayers(map, control)`
         }
             }
@@ -391,17 +397,19 @@ function _buildViewer({ content, type, outputResultDir, verbose }: any) {
             }
 
             function eooLayers(map, control) {
-                const convexHullLayer = L.geoJSON(${content.convexHullPolygon}, {
-                    style: function (feature) {
-                        return { color: '#ffb703' }
-                    },
-                    onEachFeature: createPopupTable
-                }).addTo(map)
-                control.addOverlay(convexHullLayer, 'EOO Polygon')
-                const centroid = (turf.centroid(${content.convexHullPolygon})).geometry.coordinates
-                // Precisa inverter pois o centroid vem com Long-Lat e o Leaflet usa Lat-Long
-                map.setView(new L.LatLng(centroid[1], centroid[0]), 8)
-                
+                ${
+                    content.convexHullPolygon === 'null' ?
+                    `alert('Valor de EOO é 0 Km2. Não é possível projetar um polígono.')` :
+                    `
+                    const convexHullLayer = L.geoJSON(${content.convexHullPolygon}, {
+                        style: function (feature) {
+                            return { color: '#ffb703' }
+                        },
+                        onEachFeature: createPopupTable
+                    }).addTo(map)
+                    control.addOverlay(convexHullLayer, 'EOO Polygon')
+                    `
+                }
                 const eooPointsLayer = L.geoJSON(${content.usedPointCollection}, {
                     pointToLayer: function (geoJsonPoint, latlong) {
                         return L.circleMarker(latlong, { radius: 2 })
@@ -412,6 +420,9 @@ function _buildViewer({ content, type, outputResultDir, verbose }: any) {
                     onEachFeature: createPopupTable
                     }).addTo(map)
                 control.addOverlay(eooPointsLayer, 'EOO Points')
+                const centroid = (turf.centroid(${content.usedPointCollection})).geometry.coordinates
+                // Precisa inverter pois o centroid vem com Long-Lat e o Leaflet usa Lat-Long
+                map.setView(new L.LatLng(centroid[1], centroid[0]), 8)
                 
 
 
