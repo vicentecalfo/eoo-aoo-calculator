@@ -1,6 +1,6 @@
 {
   "name": "@vicentecalfo/eoo-aoo-calc",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "AOO (Area of Occupancy) and EOO (Extent of Occurrence) calculator tool.",
   "main": "dist/index.js",
   "private": false,

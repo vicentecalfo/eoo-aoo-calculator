@@ -412,7 +412,7 @@ function _buildViewer({ content, type, outputResultDir, verbose }: any) {
                 }
                 const eooPointsLayer = L.geoJSON(${content.usedPointCollection}, {
                     pointToLayer: function (geoJsonPoint, latlong) {
-                        return L.circleMarker(latlong, { radius: 2 })
+                        return L.circleMarker(latlong, { radius: 6 })
                     },
                     style: function (feature) {
                         return { color: '#ffb703' }
@@ -439,7 +439,7 @@ function _buildViewer({ content, type, outputResultDir, verbose }: any) {
             
                 const aooPointsLayer = L.geoJSON(${content.usedPointCollection}, {
                     pointToLayer: function (geoJsonPoint, latlong) {
-                        return L.circleMarker(latlong, { radius: 2 })
+                        return L.circleMarker(latlong, { radius: 6 })
                     },
                     style: function (feature) {
                         return { color: '#cc0000' }
