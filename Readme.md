@@ -52,29 +52,29 @@ const eooValue = eoo.calculate()
 
 ```
 
-### CLI
+## CLI
 
-## Instalação
+### Instalação
 
 `npm install -g @vicentecalfo/eoo-aoo-calc`
 
-## Utilização
+### Utilização
 
 `$ calc-eoo-aoo <tipo de cálculo (eoo ou aoo))> -i <Caminho do arquivo JSON|CSV que contém os dados de ocorrência da espécie>`
 
-## Exemplos
+### Exemplos
 
-### Obtendo Valor de EOO
+#### Obtendo Valor de EOO
 
 `$ calc-eoo-aoo eoo - i ./sample-data/points_data_1.csv`
 
-### Obtendo Valor de AOO
+#### Obtendo Valor de AOO
 
 `$ calc-eoo-aoo aoo - i ./sample-data/points_data_1.csv -w 2`
 
-## Parâmetros
+### Parâmetros
 
-## EOO e AOO
+#### EOO e AOO
 |Opção|Descrição|Valor Padrão|Obrigatório|
 |---|---|---|---|
 |`-i`|Caminho do arquivo JSON/CSV que contém os dados de ocorrência da espécie (verificar os exemplos no diretório `sample-data`).|-|Sim|
@@ -82,23 +82,23 @@ const eooValue = eoo.calculate()
 |`-v`|Tipo da saída no terminal (com detalhes ou sem detalhes). Na opção sem detalhes o script ao finalizar a execução só mostrará no terminal o diretório onde os arquivos de resultados estão armazenados.|True (saída com detalhes)|Não|
 |`-h`|Lista de comandos disponíveis e documentação (help).|-|Não|
 
-## Específico de AOO
+#### Específico de AOO
 |Opção|Descrição|Valor Padrão|Obrigatório|
 |---|---|---|---|
 |`-w`|Largura da quadrícula em Km.|2|Não|
 
-## Arquivos de Resultado
+### Arquivos de Resultado
 
 Para evitar sobreposição dos arquivos, os resultados são armazenados em um diretório composto por um código único:
 
-### Informando o campo binomial no arquivo de ocorrências
+## Informando o campo binomial no arquivo de ocorrências
 `<tipo de cálculo (eoo ou aoo)>-<binomial>-<código único>`
 
 **Exemplos:**
 * `EOO-Tabebuia bahamensis-85bde5e3-da75-484c-8846-f4de41ceb859`
 * `AOO-Archidendron muricarpum-eb668422-fcd9-44c9-b31a-134d4cb2e1dd`
 
-### Sem o campo binomial no arquivo de ocorrências
+## Sem o campo binomial no arquivo de ocorrências
 
 `<tipo de cálculo (eoo ou aoo)>-<código único>`
 
@@ -148,19 +148,18 @@ assessment_id,id_no,binomial,presence,origin,seasonal,compiler,year,citation,leg
 ]
 ```
 
-
-### Arquivos de Resultado
+## Arquivos de Resultado
 
 Dentro do diretório `sample-data/output` existem 2 diretórios com os exemplos dos arquivos de resultados.
 
-#### EOO
+### EOO
 |Arquivo|Descrição|
 |---|---|
 |`summary.json`|Arquivo com o valor do EOO.|
 |`used-point-collection.json`|GeoJson com o pontos usados no cálculo.|
 |`convex-hull.json`|GeoJson com o polígono gerado.|
 
-#### AOO
+### AOO
 |Arquivo|Descrição|
 |---|---|
 |`summary.json`|Arquivo com o valor do AOO.|
