@@ -1,6 +1,6 @@
 {
   "name": "@vicentecalfo/eoo-aoo-calc",
-  "version": "1.0.0",
+  "version": "1.0.6",
   "description": "AOO (Area of Occupancy) and EOO (Extent of Occurrence) calculator tool.",
   "main": "dist/index.js",
   "private": false,
@@ -48,7 +48,8 @@
     "tsconfig-paths": "^4.1.0",
     "typescript": "^4.8.4"
   },
+  "preferGlobal": true,
   "bin": {
-    "eoo-aoo-calc": "dist/cli.js"
+    "calc-eoo-aoo": "./bin/cli"
   }
 }

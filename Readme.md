@@ -3,7 +3,7 @@
 ## EOO/AOO Calculator
 Calculadora de Extensão de ocorrência (EOO) e Área de ocupação (AOO).
 
-### Instalação
+### Instalation
 
 `npm install @vicentecalfo/eoo-aoo-calc --save`
 
@@ -51,6 +51,122 @@ const eooValue = eoo.calculate()
 */
 
 ```
+
+### CLI
+
+## Instalação
+
+`npm install -g @vicentecalfo/eoo-aoo-calc`
+
+## Utilização
+
+`$ calc-eoo-aoo <tipo de cálculo (eoo ou aoo))> -i <Caminho do arquivo JSON|CSV que contém os dados de ocorrência da espécie>`
+
+## Exemplos
+
+### Obtendo Valor de EOO
+
+`$ calc-eoo-aoo eoo - i ./sample-data/points_data_1.csv`
+
+### Obtendo Valor de AOO
+
+`$ calc-eoo-aoo aoo - i ./sample-data/points_data_1.csv -w 2`
+
+## Parâmetros
+
+## EOO e AOO
+|Opção|Descrição|Valor Padrão|Obrigatório|
+|---|---|---|---|
+|`-i`|Caminho do arquivo JSON/CSV que contém os dados de ocorrência da espécie (verificar os exemplos no diretório `sample-data`).|-|Sim|
+|`-o`|Caminho com o local onde serão armazenados os arquivos de resultado.|Mesmo diretório de onde o comando foi executado|Não|
+|`-v`|Tipo da saída no terminal (com detalhes ou sem detalhes). Na opção sem detalhes o script ao finalizar a execução só mostrará no terminal o diretório onde os arquivos de resultados estão armazenados.|True (saída com detalhes)|Não|
+|`-h`|Lista de comandos disponíveis e documentação (help).|-|Não|
+
+## Específico de AOO
+|Opção|Descrição|Valor Padrão|Obrigatório|
+|---|---|---|---|
+|`-w`|Largura da quadrícula em Km.|2|Não|
+
+## Arquivos de Resultado
+
+Para evitar sobreposição dos arquivos, os resultados são armazenados em um diretório composto por um código único:
+
+### Informando o campo binomial no arquivo de ocorrências
+`<tipo de cálculo (eoo ou aoo)>-<binomial>-<código único>`
+
+**Exemplos:**
+* `EOO-Tabebuia bahamensis-85bde5e3-da75-484c-8846-f4de41ceb859`
+* `AOO-Archidendron muricarpum-eb668422-fcd9-44c9-b31a-134d4cb2e1dd`
+
+### Sem o campo binomial no arquivo de ocorrências
+
+`<tipo de cálculo (eoo ou aoo)>-<código único>`
+
+**Exemplos:**
+* `EOO-85bde5e3-da75-484c-8846-f4de41ceb859`
+* `AOO-eb668422-fcd9-44c9-b31a-134d4cb2e1dd`
+
+### Arquivos de Entrada (ocorrências)
+
+#### Exemplo CSV
+**Importante:** As únicas colunas obrigatórias são `longitude` e `latitude`.
+
+```csv
+assessment_id,id_no,binomial,presence,origin,seasonal,compiler,year,citation,legend,subspecies,subpop,dist_comm,island,tax_comm,source,basisofrec,event_year,longitude,latitude
+143761594,142719676,Archidendron muricarpum,1,1,1,PNG Forest Research Institute (FRI),2020,PNG FRI,Extant (resident),,,,,,,PreservedSpecimen,1956,150.916667,-10.0
+143761594,142719676,Archidendron muricarpum,1,1,1,PNG Forest Research Institute (FRI),2020,PNG 
+```
+
+#### Exemplo JSON
+**Importante:** Os únicos atributos obrigatórios são `longitude` e `latitude`.
+
+```json
+[
+  {
+    "assessment_id": 143761594,
+    "id_no": 142719676,
+    "binomial": "Archidendron muricarpum",
+    "presence": 1,
+    "origin": 1,
+    "seasonal": 1,
+    "compiler": "PNG Forest Research Institute (FRI)",
+    "year": 2020,
+    "citation": "PNG FRI",
+    "legend": "Extant (resident)",
+    "subspecies": "",
+    "subpop": "",
+    "dist_comm": "",
+    "island": "",
+    "tax_comm": "",
+    "source": "",
+    "basisofrec": "PreservedSpecimen",
+    "event_year": 1956,
+    "longitude": 150.916667,
+    "latitude": -10
+  },
+  /// ...
+]
+```
+
+
+### Arquivos de Resultado
+
+Dentro do diretório `sample-data/output` existem 2 diretórios com os exemplos dos arquivos de resultados.
+
+#### EOO
+|Arquivo|Descrição|
+|---|---|
+|`summary.json`|Arquivo com o valor do EOO.|
+|`used-point-collection.json`|GeoJson com o pontos usados no cálculo.|
+|`convex-hull.json`|GeoJson com o polígono gerado.|
+
+#### AOO
+|Arquivo|Descrição|
+|---|---|
+|`summary.json`|Arquivo com o valor do AOO.|
+|`used-point-collection.json`|GeoJson com o pontos usados no cálculo.|
+|`occupied-grids.json`|GeoJson com as quadrículas ocupadas.|
+
 
 ## Informações Adicionais
 * No diretório `sample-data` existem arquivos no formato `json` com exemplos da estrutura dos dados de entrada;

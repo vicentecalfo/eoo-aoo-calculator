@@ -16,6 +16,7 @@ interface IWriteOutputFilesInput {
     outputResultDir: string
     fileContent: string
     filename: string
+    verbose: boolean
 }
 
 init()
@@ -31,6 +32,7 @@ async function init() {
         .command('eoo')
         .requiredOption('-i, --input-file <inputFile>', 'Arquivo de ocorrência da espécie.')
         .option('-o, --output-dir <outputDir>', 'Diretório onde serão armazenados os arquivos de saída', './')
+        .option('-v, --verbose <verbose>', 'Saída de dados no terminal com detalhes.', 'true')
         .action(calculateEoo)
 
     program
@@ -38,6 +40,7 @@ async function init() {
         .requiredOption('-i, --input-file <inputFile>', 'Arquivo de ocorrência da espécie.')
         .option('-o, --output-dir <outputDir>', 'Diretório onde serão armazenados os arquivos de saída', './')
         .option('-w, --cell-width-in-km <cellWidthInKm>', 'Largura da quadrícula em Km', '2')
+        .option('-v, --verbose <verbose>', 'Saída de dados no terminal com detalhes.', 'true')
         .action(calculateAoo)
 
 
@@ -45,7 +48,8 @@ async function init() {
 }
 
 async function calculateEoo(argument: string, command: OptionValues) {
-    const { inputFile, outputDir } = command.opts()
+    let { inputFile, outputDir, verbose } = command.opts()
+    verbose = verbose === 'true'
     const inputFileJson: any = await _getInputFileContent(inputFile)
     const eoo = new EOO({ coordinates: inputFileJson })
     const {
@@ -72,16 +76,21 @@ async function calculateEoo(argument: string, command: OptionValues) {
         timestamp: new Date().getTime()
 
     })
-    await _writeOutputFiles({ outputResultDir, fileContent: usedPointCollectionString, filename: 'used-point-collection.json' })
-    await _writeOutputFiles({ outputResultDir, fileContent: convexHullPolygonString, filename: 'convex-hull-polygon.json' })
-    await _writeOutputFiles({ outputResultDir, fileContent: output, filename: 'summary.json' })
-    console.log(`EOO calculated successfully and files were saved in "${outputResultDir}"`)
+    await _writeOutputFiles({ outputResultDir, fileContent: usedPointCollectionString, filename: 'used-point-collection.json', verbose })
+    await _writeOutputFiles({ outputResultDir, fileContent: convexHullPolygonString, filename: 'convex-hull-polygon.json', verbose })
+    await _writeOutputFiles({ outputResultDir, fileContent: output, filename: 'summary.json', verbose })
+    if (verbose) {
+        console.log(`EOO calculated successfully and files were saved in "${outputResultDir}"`)
+    } else {
+        console.log(outputResultDir)
+    }
 }
 
 async function calculateAoo(argument: string, command: OptionValues) {
-    let { inputFile, outputDir, cellWidthInKm } = command.opts()
+    let { inputFile, outputDir, cellWidthInKm, verbose } = command.opts()
+    verbose = verbose === 'true'
     cellWidthInKm = Number(cellWidthInKm)
-    const inputFileJson: any = await _getInputFileContent(inputFile)
+    let inputFileJson: any = await _getInputFileContent(inputFile)
     const aoo = new AOO({ coordinates: inputFileJson })
     const {
         areaInSquareKm,
@@ -112,10 +121,14 @@ async function calculateAoo(argument: string, command: OptionValues) {
         outputResultDir,
         timestamp: new Date().getTime()
     })
-    await _writeOutputFiles({ outputResultDir, fileContent: usedPointCollectionString, filename: 'used-point-collection.json' })
-    await _writeOutputFiles({ outputResultDir, fileContent: occupiedGridsString, filename: 'occupied-grids.json' })
-    await _writeOutputFiles({ outputResultDir, fileContent: output, filename: 'summary.json' })
-    console.log(`AOO calculated successfully and files were saved in "${outputResultDir}"`)
+    await _writeOutputFiles({ outputResultDir, fileContent: usedPointCollectionString, filename: 'used-point-collection.json', verbose })
+    await _writeOutputFiles({ outputResultDir, fileContent: occupiedGridsString, filename: 'occupied-grids.json', verbose })
+    await _writeOutputFiles({ outputResultDir, fileContent: output, filename: 'summary.json', verbose })
+    if (verbose) {
+        console.log(`AOO calculated successfully and files were saved in "${outputResultDir}"`)
+    } else {
+        console.log(outputResultDir)
+    }
 }
 
 function _createOutputDir({ inputFile, outputDir, binomial, type }: IOutputDirInput) {
@@ -125,7 +138,7 @@ function _createOutputDir({ inputFile, outputDir, binomial, type }: IOutputDirIn
     return outputCreatedDir
 }
 
-function _writeOutputFiles({ outputResultDir, fileContent, filename }: IWriteOutputFilesInput) {
+function _writeOutputFiles({ outputResultDir, fileContent, filename, verbose }: IWriteOutputFilesInput) {
     return new Promise((resolve, reject) => {
         const writeStream = fs.createWriteStream(outputResultDir + filename, { flags: 'w' })
         fileContent.split(':').forEach((string, i, array) => {
@@ -136,7 +149,7 @@ function _writeOutputFiles({ outputResultDir, fileContent, filename }: IWriteOut
             writeStream.write(content, 'utf-8')
         })
         writeStream.on('finish', () => {
-            console.log(`File ${filename} created successfully.`)
+            if (verbose) console.log(`File ${filename} created successfully.`)
             resolve(true)
         })
         writeStream.end()
