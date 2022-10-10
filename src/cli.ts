@@ -2,6 +2,7 @@ import { Command, OptionValues } from 'commander'
 import { EOO, AOO } from './index'
 import * as fs from 'fs'
 import csv from 'csvtojson/v2'
+import * as htmlMinify from 'html-minifier'
 import { v4 as uuidv4 } from 'uuid'
 const program = new Command()
 
@@ -79,6 +80,13 @@ async function calculateEoo(argument: string, command: OptionValues) {
     await _writeOutputFiles({ outputResultDir, fileContent: usedPointCollectionString, filename: 'used-point-collection.json', verbose })
     await _writeOutputFiles({ outputResultDir, fileContent: convexHullPolygonString, filename: 'convex-hull-polygon.json', verbose })
     await _writeOutputFiles({ outputResultDir, fileContent: output, filename: 'summary.json', verbose })
+    _buildViewer({
+        content: {
+            binomial,
+            usedPointCollection: usedPointCollectionString,
+            convexHullPolygon: convexHullPolygonString
+        }, type: 'eoo', outputResultDir, verbose
+    })
     if (verbose) {
         console.log(`EOO calculated successfully and files were saved in "${outputResultDir}"`)
     } else {
@@ -124,6 +132,13 @@ async function calculateAoo(argument: string, command: OptionValues) {
     await _writeOutputFiles({ outputResultDir, fileContent: usedPointCollectionString, filename: 'used-point-collection.json', verbose })
     await _writeOutputFiles({ outputResultDir, fileContent: occupiedGridsString, filename: 'occupied-grids.json', verbose })
     await _writeOutputFiles({ outputResultDir, fileContent: output, filename: 'summary.json', verbose })
+    _buildViewer({
+        content: {
+            binomial,
+            usedPointCollection: usedPointCollectionString,
+            occupiedGrids: occupiedGridsString,
+        }, type: 'aoo', outputResultDir, verbose
+    })
     if (verbose) {
         console.log(`AOO calculated successfully and files were saved in "${outputResultDir}"`)
     } else {
@@ -168,4 +183,264 @@ function _getInputFileContent(inputFile: string) {
             resolve(JSON.parse(output))
         }
     })
+}
+
+function _buildViewer({ content, type, outputResultDir, verbose }: any) {
+    const html = `
+    <!DOCTYPE html>
+    <html>
+
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Viewer ${type.toLocaleUpperCase()} | ${content.binomial}</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.2/dist/leaflet.css"
+            integrity="sha256-sA+zWATbFveLLNqWO2gtiw3HL/lh1giY/Inf1BJ0z14=" crossorigin="" />
+        <style>
+            /* http://meyerweb.com/eric/tools/css/reset/ 
+                v2.0 | 20110126
+                License: none (public domain)
+            */
+
+            html,
+            body,
+            div,
+            span,
+            applet,
+            object,
+            iframe,
+            h1,
+            h2,
+            h3,
+            h4,
+            h5,
+            h6,
+            p,
+            blockquote,
+            pre,
+            a,
+            abbr,
+            acronym,
+            address,
+            big,
+            cite,
+            code,
+            del,
+            dfn,
+            em,
+            img,
+            ins,
+            kbd,
+            q,
+            s,
+            samp,
+            small,
+            strike,
+            strong,
+            sub,
+            sup,
+            tt,
+            var,
+            b,
+            u,
+            i,
+            center,
+            dl,
+            dt,
+            dd,
+            ol,
+            ul,
+            li,
+            fieldset,
+            form,
+            label,
+            legend,
+            table,
+            caption,
+            tbody,
+            tfoot,
+            thead,
+            tr,
+            th,
+            td,
+            article,
+            aside,
+            canvas,
+            details,
+            embed,
+            figure,
+            figcaption,
+            footer,
+            header,
+            hgroup,
+            menu,
+            nav,
+            output,
+            ruby,
+            section,
+            summary,
+            time,
+            mark,
+            audio,
+            video {
+                margin: 0;
+                padding: 0;
+                border: 0;
+                font-size: 100%;
+                font: inherit;
+                vertical-align: baseline;
+            }
+
+            /* HTML5 display-role reset for older browsers */
+            article,
+            aside,
+            details,
+            figcaption,
+            figure,
+            footer,
+            header,
+            hgroup,
+            menu,
+            nav,
+            section {
+                display: block;
+            }
+
+            body {
+                line-height: 1;
+            }
+
+            ol,
+            ul {
+                list-style: none;
+            }
+
+            blockquote,
+            q {
+                quotes: none;
+            }
+
+            blockquote:before,
+            blockquote:after,
+            q:before,
+            q:after {
+                content: '';
+                content: none;
+            }
+
+            table {
+                border-collapse: collapse;
+                border-spacing: 0;
+            }
+
+            /* Mapa */
+            #map {
+                background-color: #f2f2f2;
+                width: 100vw;
+                height: 100vh;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+
+    <body>
+        <!--[if lt IE 7]>
+                <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="#">upgrade your browser</a> to improve your experience.</p>
+            <![endif]-->
+        <div id="map"></div>
+        <script src='https://unpkg.com/@turf/turf@6/turf.min.js'></script>
+        <script src="https://code.jquery.com/jquery-3.6.1.min.js"
+            integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
+        <script src="https://unpkg.com/leaflet@1.9.2/dist/leaflet.js"
+            integrity="sha256-o9N1jGDZrf5tS+Ft4gbIK7mYMipq9lqpVJ91xHSyKhg=" crossorigin=""></script>
+        <script>
+            init()
+            function init() {
+                const map = L.map('map').setView([51.505, -0.09], 13)
+                const osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                }).addTo(map)
+
+                const gm = L.tileLayer('http://{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', {
+                    maxZoom: 20,
+                    subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
+                }).addTo(map)
+
+                map.setView(new L.LatLng(-15.83, -47.86), 8)
+
+                const baseLayers = {
+                    "OpenStreetMap": osm,
+                    "Google Maps": gm
+                }
+
+                const overlays = {}
+                const control = L.control.layers(baseLayers, overlays).addTo(map)
+
+                ${type === 'eoo' ? `eooLayers(map, control)` : `aooLayers(map, control)`
+        }
+            }
+
+            function eooLayers(map, control) {
+                const convexHullLayer = L.geoJSON(${content.convexHullPolygon}, {
+                    style: function (feature) {
+                        return { color: '#ffb703' }
+                    }
+                }).addTo(map)
+                control.addOverlay(convexHullLayer, 'EOO Polygon')
+                const centroid = (turf.centroid(${content.convexHullPolygon})).geometry.coordinates
+                // Precisa inverter pois o centroid vem com Long-Lat e o Leaflet usa Lat-Long
+                map.setView(new L.LatLng(centroid[1], centroid[0]), 8)
+                
+                const eooPointsLayer = L.geoJSON(${content.usedPointCollection}, {
+                    pointToLayer: function (geoJsonPoint, latlong) {
+                        return L.circleMarker(latlong, { radius: 2 })
+                    },
+                    style: function (feature) {
+                        return { color: '#ffb703' }
+                    }
+                    }).addTo(map)
+                control.addOverlay(eooPointsLayer, 'EOO Points')
+                
+
+
+            }
+
+            function aooLayers(map, control) {
+                const occupiedGridsLayer = L.geoJSON(${content.occupiedGrids}, {
+                    style: function (feature) {
+                        return { color: '#cc0000' }
+                    }
+                }).addTo(map)
+                control.addOverlay(occupiedGridsLayer, 'AOO Grids')
+            
+                const aooPointsLayer = L.geoJSON(${content.usedPointCollection}, {
+                    pointToLayer: function (geoJsonPoint, latlong) {
+                        return L.circleMarker(latlong, { radius: 2 })
+                    },
+                    style: function (feature) {
+                        return { color: '#cc0000' }
+                    }
+                }).addTo(map)
+                control.addOverlay(aooPointsLayer, 'AOO Points')
+                const centroid = (turf.centroid(${content.usedPointCollection})).geometry.coordinates
+                // Precisa inverter pois o centroid vem com Long-Lat e o Leaflet usa Lat-Long
+                map.setView(new L.LatLng(centroid[1], centroid[0]), 8)
+            }
+        </script>
+
+    </body>
+
+    </html>
+    `
+    const minify = htmlMinify.minify
+    const minifyOptions = {
+        collapseWhitespace: true,
+        minifyCSS:true,
+        minifyJS: true
+    }
+    fs.writeFileSync(outputResultDir + 'viewer.html', minify(html, minifyOptions))
+    if (verbose) console.log('Map Viewer created successfully.')
 }
