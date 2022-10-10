@@ -9,16 +9,19 @@ export class EOO {
         const startTime = Date.now()
         const totalPoints = this.input.coordinates.length
         const cleanedCoordinates = this.helper.cleanCoordinates(this.input)
-        const occurrence = this._createPoints(cleanedCoordinates.array)
+        const occurrence = this._createPoints(cleanedCoordinates.object)
         const convexHull = turf.convex(occurrence.pointCollection)
         let areaInSquareMeters = 0
-        let convexHullPolygon = null
+        let convexHullPolygon: any = null
         if (convexHull !== null) {
             areaInSquareMeters = turf.area(convexHull)
             convexHullPolygon = convexHull
         }
         const areaInSquareKm = turf.convertArea(areaInSquareMeters, 'meters', 'kilometers')
         const executionTimeInSeconds = (Date.now() - startTime) / 1000
+        if (convexHullPolygon !== null) {
+            convexHullPolygon.properties.EOO = areaInSquareKm.toLocaleString('en-US') + ' Km<sup>2</sup>'
+        }
         return {
             areaInSquareKm,
             totalPoints,
@@ -30,10 +33,10 @@ export class EOO {
         }
     }
 
-    private _createPoints(coordinates: number[][]) {
+    private _createPoints(coordinates: any) {
         const points: turf.helpers.Feature<turf.helpers.Point>[] = []
-        coordinates.forEach(coord => {
-            const point = turf.point(coord)
+        coordinates.geometry.coordinates.forEach((coord: any, index: number) => {
+            const point = turf.point(coord, coordinates.properties[index.toString()])
             points.push(point)
         })
         const pointCollection = turf.featureCollection(points)

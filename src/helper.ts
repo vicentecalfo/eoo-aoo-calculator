@@ -31,12 +31,13 @@ export class Helper {
     }
 
     public cleanCoordinates({ coordinates }: ICoordinatesInput): ICoordinatesOutput {
+        const pointProperties = {...coordinates}
         const onlyCoordinates = this.formatMyCoordinatesToArray(coordinates)
-        const multiPoints = turf.multiPoint(onlyCoordinates)
-        let sanitizedCoords = turf.cleanCoords(multiPoints).geometry.coordinates
+        const multiPoints = turf.multiPoint(onlyCoordinates,pointProperties)
+        let sanitizedCoords = turf.cleanCoords(multiPoints)
         return {
-            array: sanitizedCoords,
-            object: this.formatMyCoordinatesToObject(sanitizedCoords)
+            array: sanitizedCoords.geometry.coordinates,
+            object: sanitizedCoords,
         }
     }
 

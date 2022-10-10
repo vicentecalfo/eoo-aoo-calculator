@@ -383,11 +383,19 @@ function _buildViewer({ content, type, outputResultDir, verbose }: any) {
         }
             }
 
+            function createPopupTable(feature, layer){
+                const tableRows = Object.keys(feature.properties).map(th =>'<tr><th style="padding:5px;"><strong>'+ th +'</strong><th><td style="padding:5px;">'+ feature.properties[th] +'</td></tr>')
+                const tableHtml = '<table>'+ tableRows.join('') +'</table>'
+                layer.bindPopup(tableHtml)
+
+            }
+
             function eooLayers(map, control) {
                 const convexHullLayer = L.geoJSON(${content.convexHullPolygon}, {
                     style: function (feature) {
                         return { color: '#ffb703' }
-                    }
+                    },
+                    onEachFeature: createPopupTable
                 }).addTo(map)
                 control.addOverlay(convexHullLayer, 'EOO Polygon')
                 const centroid = (turf.centroid(${content.convexHullPolygon})).geometry.coordinates
@@ -400,7 +408,8 @@ function _buildViewer({ content, type, outputResultDir, verbose }: any) {
                     },
                     style: function (feature) {
                         return { color: '#ffb703' }
-                    }
+                    },
+                    onEachFeature: createPopupTable
                     }).addTo(map)
                 control.addOverlay(eooPointsLayer, 'EOO Points')
                 
@@ -412,7 +421,8 @@ function _buildViewer({ content, type, outputResultDir, verbose }: any) {
                 const occupiedGridsLayer = L.geoJSON(${content.occupiedGrids}, {
                     style: function (feature) {
                         return { color: '#cc0000' }
-                    }
+                    },
+                    onEachFeature: createPopupTable
                 }).addTo(map)
                 control.addOverlay(occupiedGridsLayer, 'AOO Grids')
             
@@ -422,7 +432,8 @@ function _buildViewer({ content, type, outputResultDir, verbose }: any) {
                     },
                     style: function (feature) {
                         return { color: '#cc0000' }
-                    }
+                    },
+                    onEachFeature: createPopupTable
                 }).addTo(map)
                 control.addOverlay(aooPointsLayer, 'AOO Points')
                 const centroid = (turf.centroid(${content.usedPointCollection})).geometry.coordinates

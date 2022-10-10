@@ -6,7 +6,7 @@ export interface IAoo {
 }
 
 export interface IAooPointsInput {
-    coordinates: number[][]
+    coordinates: any
     bufferRadius: number
     bufferRadiusUnit: turf.Units
     counterKey: string
@@ -35,7 +35,7 @@ export class AOO {
         const totalPoints = this.input.coordinates.length
         const cleanedCoordinates = this.helper.cleanCoordinates(this.input)
         const coordinatesPoints = this._createPoints({
-            coordinates: cleanedCoordinates.array,
+            coordinates: cleanedCoordinates.object,
             bufferRadius: gridWidthInKm,
             bufferRadiusUnit: 'kilometers',
             counterKey: 'presence'
@@ -67,10 +67,10 @@ export class AOO {
     private _createPoints({ coordinates, bufferRadius, bufferRadiusUnit, counterKey }: IAooPointsInput): IAooPointsOutput {
         const points: turf.helpers.Feature<turf.helpers.Point, any>[] = []
         const bufferedPoints: turf.helpers.Feature<turf.helpers.Polygon, turf.helpers.Properties>[] = []
-        const counterValue: { [name: string]: number } = {}
-        counterValue[counterKey] = 1
-        coordinates.forEach(coord => {
-            const point = turf.point(coord, counterValue)
+        coordinates.geometry.coordinates.forEach((coord: any, index: number) => {
+            const properties: { [name: string]: number } = { ...coordinates.properties[index.toString()] }
+            properties[counterKey] = 1
+            const point = turf.point(coord, properties)
             const bufferdPoint = turf.buffer(point, bufferRadius, { units: bufferRadiusUnit })
             points.push(point)
             bufferedPoints.push(bufferdPoint)
@@ -99,7 +99,13 @@ export class AOO {
             counterKey,
             'value'
         )
-        const foundGrids = collected.features.filter(grid => grid?.properties?.value.length > 0)
+        let foundGrids = collected.features.filter(grid => grid?.properties?.value.length > 0)
+        foundGrids = foundGrids.map((grid: any) => {
+            delete grid.properties.value
+            grid.properties['Cell width'] = gridWidthInKm + ' Km'
+            grid.properties['Cell area'] = gridAreaInSquareKm.toLocaleString('en-US') + ' Km<sup>2</sup>'
+            return grid
+        })
         return {
             foundGrids,
             totalFoundGrids: foundGrids.length,
