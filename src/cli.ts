@@ -85,8 +85,10 @@ async function calculateEoo(argument: string, command: OptionValues) {
     await _writeOutputFiles({ outputResultDir, fileContent: usedPointCollectionString, filename: 'used-point-collection.json', verbose })
     await _writeOutputFiles({ outputResultDir, fileContent: convexHullPolygonString, filename: 'convex-hull-polygon.json', verbose })
     await _writeOutputFiles({ outputResultDir, fileContent: output, filename: 'summary.json', verbose })
+    await _writeOutputFiles({ outputResultDir, fileContent: _buildSummaryCSV(output), filename: 'summary.csv', verbose })
     await _geojson2shp({ outputResultDir, fileContent: usedPointCollection, filename: 'used-point-collection', verbose })
     await _geojson2shp({ outputResultDir, fileContent: convexHullPolygon, filename: 'convex-hull-polygon', verbose })
+
     _buildViewer({
         content: {
             binomial,
@@ -139,6 +141,7 @@ async function calculateAoo(argument: string, command: OptionValues) {
     await _writeOutputFiles({ outputResultDir, fileContent: usedPointCollectionString, filename: 'used-point-collection.json', verbose })
     await _writeOutputFiles({ outputResultDir, fileContent: occupiedGridsString, filename: 'occupied-grids.json', verbose })
     await _writeOutputFiles({ outputResultDir, fileContent: output, filename: 'summary.json', verbose })
+    await _writeOutputFiles({ outputResultDir, fileContent: _buildSummaryCSV(output), filename: 'summary.csv', verbose })
     await _geojson2shp({ outputResultDir, fileContent: usedPointCollection, filename: 'used-point-collection', verbose })
     await _geojson2shp({ outputResultDir, fileContent: occupiedGridsString, filename: 'occupied-grids', verbose })
     _buildViewer({
@@ -490,4 +493,12 @@ function _geojson2shp({ outputResultDir, fileContent, filename, verbose }: any) 
             console.log(`Shape file ${filenameShp} created successfully.`)
         }
     })
+}
+
+function _buildSummaryCSV(fileContent: any) {
+    fileContent = JSON.parse(fileContent)
+    const columns = Object.keys(fileContent)
+    const values = Object.values(fileContent)
+    const content = [columns, values]
+    return content.map(row => row.join(',')).join('\n')
 }

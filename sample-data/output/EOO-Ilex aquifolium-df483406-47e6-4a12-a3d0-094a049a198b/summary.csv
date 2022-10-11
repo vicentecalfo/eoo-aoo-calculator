@@ -1,0 +1,2 @@
+areaInSquareKm,totalPoints,totalRedundantPoints,executionTimeInSeconds,binomial,usedPointCollection,convexHullPolygon,outputResultDir,timestamp
+5778465.768338917,804,118,0.01,Ilex aquifolium,content available in used-point-collection.json,content available in convex-hull-polygon.json,./EOO-Ilex aquifolium-df483406-47e6-4a12-a3d0-094a049a198b/,1665507701375

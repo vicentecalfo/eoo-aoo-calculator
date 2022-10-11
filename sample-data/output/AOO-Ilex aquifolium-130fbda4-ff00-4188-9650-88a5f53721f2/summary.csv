@@ -1,0 +1,2 @@
+areaInSquareKm,occupiedGrids,totalOccupiedGrids,gridAreaInSquareKm,gridWidthInKm,totalPoints,totalRedundantPoints,usedPointCollection,executionTimeInSeconds,binomial,outputResultDir,timestamp
+2340,content available in occupied-grids.json,585,4,2,804,118,content available in used-point-collection.json,7.187,Ilex aquifolium,./AOO-Ilex aquifolium-130fbda4-ff00-4188-9650-88a5f53721f2/,1665507955500

@@ -20,14 +20,14 @@ export class EOO {
         const areaInSquareKm = turf.convertArea(areaInSquareMeters, 'meters', 'kilometers')
         const executionTimeInSeconds = (Date.now() - startTime) / 1000
         if (convexHullPolygon !== null) {
-            convexHullPolygon.properties.EOO = areaInSquareKm.toLocaleString('en-US') + ' Km<sup>2</sup>'
+            convexHullPolygon.properties.EOO = areaInSquareKm.toLocaleString('en-US') + ' Km2'
         }
         return {
             areaInSquareKm,
             totalPoints,
             totalRedundantPoints: totalPoints - cleanedCoordinates.array.length,
             usedPointCollection: occurrence.pointCollection,
-            convexHullPolygon,
+            convexHullPolygon: turf.featureCollection([convexHullPolygon]),
             executionTimeInSeconds,
             binomial: this.helper.getBinomial(this.input.coordinates[0])
         }

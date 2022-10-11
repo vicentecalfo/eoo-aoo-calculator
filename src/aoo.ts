@@ -103,11 +103,11 @@ export class AOO {
         foundGrids = foundGrids.map((grid: any) => {
             delete grid.properties.value
             grid.properties['Cell width'] = gridWidthInKm + ' Km'
-            grid.properties['Cell area'] = gridAreaInSquareKm.toLocaleString('en-US') + ' Km<sup>2</sup>'
+            grid.properties['Cell area'] = gridAreaInSquareKm.toLocaleString('en-US') + ' Km2'
             return grid
         })
         return {
-            foundGrids,
+            foundGrids: turf.featureCollection(foundGrids),
             totalFoundGrids: foundGrids.length,
             gridAreaInSquareKm,
             gridWidthInKm
