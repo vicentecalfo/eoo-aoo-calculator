@@ -157,7 +157,9 @@ Dentro do diretório `sample-data/output` existem 2 diretórios com os exemplos 
 |---|---|
 |`summary.json`|Arquivo com o valor do EOO.|
 |`used-point-collection.json`|GeoJson com o pontos usados no cálculo.|
+|`used-point-collection.zip`|Shape file com o pontos usados no cálculo.|
 |`convex-hull.json`|GeoJson com o polígono gerado.|
+|`convex-hull.zip`|Shape file com o polígono gerado.|
 |`viewer.html`|Mapa com os dados de `used-point-collection.json` e `convex-hull.json` projetados.|
 
 ### AOO
@@ -165,7 +167,9 @@ Dentro do diretório `sample-data/output` existem 2 diretórios com os exemplos 
 |---|---|
 |`summary.json`|Arquivo com o valor do AOO.|
 |`used-point-collection.json`|GeoJson com o pontos usados no cálculo.|
+|`used-point-collection.zip`|Shape file com o pontos usados no cálculo.|
 |`occupied-grids.json`|GeoJson com as quadrículas ocupadas.|
+|`occupied-grids.zip`|Shape file com as quadrículas ocupadas.|
 |`viewer.html`|Mapa com os dados de `used-point-collection.json` e `occupied-grids.json` projetados.|
 
 

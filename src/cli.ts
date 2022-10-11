@@ -4,6 +4,11 @@ import * as fs from 'fs'
 import csv from 'csvtojson/v2'
 import * as htmlMinify from 'html-minifier'
 import { v4 as uuidv4 } from 'uuid'
+import * as turf from '@turf/turf'
+
+//@ts-ignore
+import { convert } from 'geojson2shp'
+
 const program = new Command()
 
 interface IOutputDirInput {
@@ -80,6 +85,8 @@ async function calculateEoo(argument: string, command: OptionValues) {
     await _writeOutputFiles({ outputResultDir, fileContent: usedPointCollectionString, filename: 'used-point-collection.json', verbose })
     await _writeOutputFiles({ outputResultDir, fileContent: convexHullPolygonString, filename: 'convex-hull-polygon.json', verbose })
     await _writeOutputFiles({ outputResultDir, fileContent: output, filename: 'summary.json', verbose })
+    await _geojson2shp({ outputResultDir, fileContent: usedPointCollection, filename: 'used-point-collection', verbose })
+    await _geojson2shp({ outputResultDir, fileContent: convexHullPolygon, filename: 'convex-hull-polygon', verbose })
     _buildViewer({
         content: {
             binomial,
@@ -132,6 +139,8 @@ async function calculateAoo(argument: string, command: OptionValues) {
     await _writeOutputFiles({ outputResultDir, fileContent: usedPointCollectionString, filename: 'used-point-collection.json', verbose })
     await _writeOutputFiles({ outputResultDir, fileContent: occupiedGridsString, filename: 'occupied-grids.json', verbose })
     await _writeOutputFiles({ outputResultDir, fileContent: output, filename: 'summary.json', verbose })
+    await _geojson2shp({ outputResultDir, fileContent: usedPointCollection, filename: 'used-point-collection', verbose })
+    await _geojson2shp({ outputResultDir, fileContent: occupiedGridsString, filename: 'occupied-grids', verbose })
     _buildViewer({
         content: {
             binomial,
@@ -397,10 +406,9 @@ function _buildViewer({ content, type, outputResultDir, verbose }: any) {
             }
 
             function eooLayers(map, control) {
-                ${
-                    content.convexHullPolygon === 'null' ?
-                    `alert('Valor de EOO é 0 Km2. Não é possível projetar um polígono.')` :
-                    `
+                ${content.convexHullPolygon === 'null' ?
+            `alert('Valor de EOO é 0 Km2. Não é possível projetar um polígono.')` :
+            `
                     const convexHullLayer = L.geoJSON(${content.convexHullPolygon}, {
                         style: function (feature) {
                             return { color: '#ffb703' }
@@ -409,7 +417,7 @@ function _buildViewer({ content, type, outputResultDir, verbose }: any) {
                     }).addTo(map)
                     control.addOverlay(convexHullLayer, 'EOO Polygon')
                     `
-                }
+        }
                 const eooPointsLayer = L.geoJSON(${content.usedPointCollection}, {
                     pointToLayer: function (geoJsonPoint, latlong) {
                         return L.circleMarker(latlong, { radius: 6 })
@@ -460,9 +468,26 @@ function _buildViewer({ content, type, outputResultDir, verbose }: any) {
     const minify = htmlMinify.minify
     const minifyOptions = {
         collapseWhitespace: true,
-        minifyCSS:true,
+        minifyCSS: true,
         minifyJS: true
     }
     fs.writeFileSync(outputResultDir + 'viewer.html', minify(html, minifyOptions))
     if (verbose) console.log('Map Viewer created successfully.')
+}
+
+function _geojson2shp({ outputResultDir, fileContent, filename, verbose }: any) {
+    return new Promise(async (resolve, reject) => {
+        const options = {
+            layer: filename,
+            targetCrs: 4326 //wgs84
+        }
+        const filenameShp = `${filename}-shp.zip`
+        const readStream = fs.createReadStream(outputResultDir + filename + '.json')
+        const writeStream = fs.createWriteStream(outputResultDir + filenameShp, { flags: 'w' })
+        await convert(readStream, writeStream, options)
+        resolve(true)
+        if (verbose) {
+            console.log(`Shape file ${filenameShp} created successfully.`)
+        }
+    })
 }
