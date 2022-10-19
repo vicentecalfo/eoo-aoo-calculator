@@ -23,7 +23,8 @@ export interface IAooOccupiedGridInput {
     bbox: turf.helpers.BBox
     pointCollection: turf.helpers.FeatureCollection<turf.helpers.Point, any>
     gridWidthInKm: number
-    counterKey: string
+    counterKey: string,
+    convexHull: turf.helpers.Feature<turf.helpers.Polygon, turf.helpers.Properties> | null
 }
 
 export class AOO {
@@ -42,10 +43,11 @@ export class AOO {
         })
         const bbox = this._createBbox(coordinatesPoints.bufferedPointCollection)
         const countOccupiedGrids = this._getOccupiedGrids({
-            bbox,
+            bbox: bbox.bbox,
             pointCollection: coordinatesPoints.pointCollection,
             gridWidthInKm: gridWidthInKm,
-            counterKey: coordinatesPoints.counterKey
+            counterKey: coordinatesPoints.counterKey,
+            convexHull: bbox.convexHull
         })
         const totalOccupiedGrids = countOccupiedGrids.totalFoundGrids
         const areaInSquareKm = totalOccupiedGrids * (gridWidthInKm * gridWidthInKm)
@@ -86,10 +88,10 @@ export class AOO {
     ) {
         const convexHull = turf.convex(pointCollection)
         const bbox = turf.bbox(convexHull)
-        return bbox
+        return ({ bbox, convexHull })
     }
 
-    private _getOccupiedGrids({ bbox, pointCollection, gridWidthInKm, counterKey }: IAooOccupiedGridInput) {
+    private _getOccupiedGrids({ bbox, pointCollection, gridWidthInKm, counterKey, convexHull }: IAooOccupiedGridInput) {
         const squareGrid = turf.squareGrid(bbox, gridWidthInKm)
         const gridAreaInSquareMeters = turf.area(squareGrid.features[0])
         const gridAreaInSquareKm = Number(turf.convertArea(gridAreaInSquareMeters, 'meters', 'kilometers').toFixed())

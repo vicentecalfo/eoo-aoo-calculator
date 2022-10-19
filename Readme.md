@@ -182,3 +182,4 @@ Dentro do diretório `sample-data/output` existem 2 diretórios com os exemplos 
 
 ## To-Do
 - [ ] Traduzir para inglês o arquivo de documentação (`readme.md`) 
+

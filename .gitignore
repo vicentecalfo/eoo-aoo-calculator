@@ -11,3 +11,4 @@ dist
 uploads/*
 !uploads/.gitkeep
 *.tgz
+.obsidian

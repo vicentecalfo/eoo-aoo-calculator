@@ -160,7 +160,7 @@ async function calculateAoo(argument: string, command: OptionValues) {
 
 function _createOutputDir({ inputFile, outputDir, binomial, type }: IOutputDirInput) {
     const uuidDir = uuidv4()
-    const outputCreatedDir = outputDir + type + '-' + (binomial === null ? inputFile + '-' + uuidDir : binomial + '-' + uuidDir) + '/'
+    const outputCreatedDir = outputDir + type + '-' + (binomial === null ? inputFile + '-' + uuidDir : binomial?.split(' ').join('_') + '-' + uuidDir) + '/'
     fs.mkdirSync(outputCreatedDir)
     return outputCreatedDir
 }
