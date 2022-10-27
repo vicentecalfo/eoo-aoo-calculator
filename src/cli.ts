@@ -1,5 +1,6 @@
 import { Command, OptionValues } from 'commander'
 import { EOO, AOO } from './index'
+import * as fsExtra from 'fs-extra'
 import * as fs from 'fs'
 import csv from 'csvtojson/v2'
 import * as htmlMinify from 'html-minifier'
@@ -16,6 +17,7 @@ interface IOutputDirInput {
     outputDir: string
     binomial: string | null | undefined
     type: string
+    flatDir: boolean
 }
 
 interface IWriteOutputFilesInput {
@@ -38,6 +40,7 @@ async function init() {
         .command('eoo')
         .requiredOption('-i, --input-file <inputFile>', 'Arquivo de ocorrência da espécie.')
         .option('-o, --output-dir <outputDir>', 'Diretório onde serão armazenados os arquivos de saída', './')
+        .option('-f, --flat-dir <flatDir>', 'Diretório onde serão armazenados os arquivos de saída (cria apenas uma pasta EOO)', 'false')
         .option('-v, --verbose <verbose>', 'Saída de dados no terminal com detalhes.', 'true')
         .action(calculateEoo)
 
@@ -45,6 +48,7 @@ async function init() {
         .command('aoo')
         .requiredOption('-i, --input-file <inputFile>', 'Arquivo de ocorrência da espécie.')
         .option('-o, --output-dir <outputDir>', 'Diretório onde serão armazenados os arquivos de saída', './')
+        .option('-f, --flat-dir <flatDir>', 'Diretório onde serão armazenados os arquivos de saída (cria apenas uma pasta AOO)', 'false')
         .option('-w, --cell-width-in-km <cellWidthInKm>', 'Largura da quadrícula em Km', '2')
         .option('-v, --verbose <verbose>', 'Saída de dados no terminal com detalhes.', 'true')
         .action(calculateAoo)
@@ -54,8 +58,9 @@ async function init() {
 }
 
 async function calculateEoo(argument: string, command: OptionValues) {
-    let { inputFile, outputDir, verbose } = command.opts()
+    let { inputFile, outputDir, verbose, flatDir } = command.opts()
     verbose = verbose === 'true'
+    flatDir = flatDir === 'true'
     const inputFileJson: any = await _getInputFileContent(inputFile)
     const eoo = new EOO({ coordinates: inputFileJson })
     const {
@@ -67,7 +72,7 @@ async function calculateEoo(argument: string, command: OptionValues) {
         usedPointCollection,
         convexHullPolygon
     } = eoo.calculate()
-    const outputResultDir = _createOutputDir({ inputFile, outputDir, binomial, type: 'EOO' })
+    const outputResultDir = _createOutputDir({ inputFile, outputDir, binomial, type: 'EOO', flatDir })
     const usedPointCollectionString = JSON.stringify(usedPointCollection)
     const convexHullPolygonString = JSON.stringify(convexHullPolygon)
     const output = JSON.stringify({
@@ -104,8 +109,9 @@ async function calculateEoo(argument: string, command: OptionValues) {
 }
 
 async function calculateAoo(argument: string, command: OptionValues) {
-    let { inputFile, outputDir, cellWidthInKm, verbose } = command.opts()
+    let { inputFile, outputDir, cellWidthInKm, verbose, flatDir } = command.opts()
     verbose = verbose === 'true'
+    flatDir = flatDir === 'true'
     cellWidthInKm = Number(cellWidthInKm)
     let inputFileJson: any = await _getInputFileContent(inputFile)
     const aoo = new AOO({ coordinates: inputFileJson })
@@ -121,7 +127,7 @@ async function calculateAoo(argument: string, command: OptionValues) {
         executionTimeInSeconds,
         binomial
     } = aoo.calculate({ gridWidthInKm: cellWidthInKm })
-    const outputResultDir = _createOutputDir({ inputFile, outputDir, binomial, type: 'AOO' })
+    const outputResultDir = _createOutputDir({ inputFile, outputDir, binomial, type: 'AOO', flatDir })
     const usedPointCollectionString = JSON.stringify(usedPointCollection)
     const occupiedGridsString = JSON.stringify(occupiedGrids)
     const output = JSON.stringify({
@@ -158,10 +164,11 @@ async function calculateAoo(argument: string, command: OptionValues) {
     }
 }
 
-function _createOutputDir({ inputFile, outputDir, binomial, type }: IOutputDirInput) {
+function _createOutputDir({ inputFile, outputDir, binomial, type, flatDir }: IOutputDirInput) {
     const uuidDir = uuidv4()
-    const outputCreatedDir = outputDir + type + '-' + (binomial === null ? inputFile + '-' + uuidDir : binomial?.split(' ').join('_') + '-' + uuidDir) + '/'
-    fs.mkdirSync(outputCreatedDir)
+    let outputCreatedDir = outputDir + type + '-' + (binomial === null ? inputFile + '-' + uuidDir : binomial?.split(' ').join('_') + '-' + uuidDir) + '/'
+    if(flatDir) outputCreatedDir = `${outputDir}${type}/`
+    fsExtra.ensureDirSync(outputCreatedDir)
     return outputCreatedDir
 }
 
