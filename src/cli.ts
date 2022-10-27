@@ -5,7 +5,6 @@ import * as fs from 'fs'
 import csv from 'csvtojson/v2'
 import * as htmlMinify from 'html-minifier'
 import { v4 as uuidv4 } from 'uuid'
-import * as turf from '@turf/turf'
 
 //@ts-ignore
 import { convert } from 'geojson2shp'
@@ -203,6 +202,7 @@ function _getInputFileContent(inputFile: string) {
         }
     })
 }
+
 
 function _buildViewer({ content, type, outputResultDir, verbose }: any) {
     const html = `
