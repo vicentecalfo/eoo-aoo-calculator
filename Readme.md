@@ -79,6 +79,7 @@ const eooValue = eoo.calculate()
 |---|---|---|---|
 |`-i`|Caminho do arquivo JSON/CSV que contém os dados de ocorrência da espécie (verificar os exemplos no diretório `sample-data`).|-|Sim|
 |`-o`|Caminho com o local onde serão armazenados os arquivos de resultado.|Mesmo diretório de onde o comando foi executado|Não|
+|`-f`|Cria um diretório simples, apenas com uma pasta EOO/AOO.|False|Não|
 |`-v`|Tipo da saída no terminal (com detalhes ou sem detalhes). Na opção sem detalhes o script ao finalizar a execução só mostrará no terminal o diretório onde os arquivos de resultados estão armazenados.|True (saída com detalhes)|Não|
 |`-h`|Lista de comandos disponíveis e documentação (help).|-|Não|
 
@@ -105,6 +106,11 @@ Para evitar sobreposição dos arquivos, os resultados são armazenados em um di
 **Exemplos:**
 * `EOO-85bde5e3-da75-484c-8846-f4de41ceb859`
 * `AOO-eb668422-fcd9-44c9-b31a-134d4cb2e1dd`
+
+## Usando o parâmetro -f 
+
+O parâmetro `-f` é usado para criar um diretório de resultado simples (EOO/AOO), sem a informação da espécie como indicado anteriormente.
+
 
 ### Arquivos de Entrada (ocorrências)
 
