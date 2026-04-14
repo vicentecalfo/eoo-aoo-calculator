@@ -27,6 +27,11 @@ export interface IAooOccupiedGridInput {
     convexHull: turf.helpers.Feature<turf.helpers.Polygon, turf.helpers.Properties> | null
 }
 
+export interface IAooSinglePointInput {
+    point: turf.helpers.Feature<turf.helpers.Point, any>
+    gridWidthInKm: number
+}
+
 export class AOO {
     private helper = new Helper()
     constructor(private input: ICoordinatesInput) { }
@@ -35,20 +40,33 @@ export class AOO {
         const startTime = Date.now()
         const totalPoints = this.input.coordinates.length
         const cleanedCoordinates = this.helper.cleanCoordinates(this.input)
+        const uniquePointsCount = cleanedCoordinates.array.length
+        
         const coordinatesPoints = this._createPoints({
             coordinates: cleanedCoordinates.object,
             bufferRadius: gridWidthInKm,
             bufferRadiusUnit: 'kilometers',
             counterKey: 'presence'
         })
-        const bbox = this._createBbox(coordinatesPoints.bufferedPointCollection)
-        const countOccupiedGrids = this._getOccupiedGrids({
-            bbox: bbox.bbox,
-            pointCollection: coordinatesPoints.pointCollection,
-            gridWidthInKm: gridWidthInKm,
-            counterKey: coordinatesPoints.counterKey,
-            convexHull: bbox.convexHull
-        })
+
+        let countOccupiedGrids: any
+        
+        if (uniquePointsCount === 1) {
+            countOccupiedGrids = this._getOccupiedGridsForSinglePoint({
+                point: coordinatesPoints.points[0],
+                gridWidthInKm: gridWidthInKm
+            })
+        } else {
+            const bbox = this._createBbox(coordinatesPoints.bufferedPointCollection)
+            countOccupiedGrids = this._getOccupiedGrids({
+                bbox: bbox.bbox,
+                pointCollection: coordinatesPoints.pointCollection,
+                gridWidthInKm: gridWidthInKm,
+                counterKey: coordinatesPoints.counterKey,
+                convexHull: bbox.convexHull
+            })
+        }
+
         const totalOccupiedGrids = countOccupiedGrids.totalFoundGrids
         const areaInSquareKm = totalOccupiedGrids * (gridWidthInKm * gridWidthInKm)
         const executionTimeInSeconds = (Date.now() - startTime) / 1000
@@ -101,7 +119,7 @@ export class AOO {
             counterKey,
             'value'
         )
-        let foundGrids = collected.features.filter(grid => grid?.properties?.value.length > 0)
+        let foundGrids = collected.features.filter((grid: any) => grid?.properties?.value.length > 0)
         foundGrids = foundGrids.map((grid: any) => {
             delete grid.properties.value
             grid.properties['Cell width'] = gridWidthInKm + ' Km'
@@ -111,6 +129,41 @@ export class AOO {
         return {
             foundGrids: turf.featureCollection(foundGrids),
             totalFoundGrids: foundGrids.length,
+            gridAreaInSquareKm,
+            gridWidthInKm
+        }
+    }
+
+    private _getOccupiedGridsForSinglePoint({ point, gridWidthInKm }: IAooSinglePointInput) {
+
+        const [longitude, latitude] = point.geometry.coordinates
+        
+        const latDegreesPerKm = 1 / 111.32
+        const lonDegreesPerKm = 1 / (111.32 * Math.cos(latitude * Math.PI / 180))
+        
+        const halfLatWidth = (gridWidthInKm / 2) * latDegreesPerKm
+        const halfLonWidth = (gridWidthInKm / 2) * lonDegreesPerKm
+        
+        const coordinates = [
+            [longitude - halfLonWidth, latitude - halfLatWidth],
+            [longitude + halfLonWidth, latitude - halfLatWidth],
+            [longitude + halfLonWidth, latitude + halfLatWidth],
+            [longitude - halfLonWidth, latitude + halfLatWidth],
+            [longitude - halfLonWidth, latitude - halfLatWidth]
+        ]
+        
+        const squarePolygon = turf.polygon([coordinates], point.properties)
+        
+        const gridAreaInSquareMeters = turf.area(squarePolygon)
+        const gridAreaInSquareKm = Number(turf.convertArea(gridAreaInSquareMeters, 'meters', 'kilometers').toFixed())
+        
+        squarePolygon.properties = squarePolygon.properties || {}
+        squarePolygon.properties['Cell width'] = gridWidthInKm + ' Km'
+        squarePolygon.properties['Cell area'] = gridAreaInSquareKm.toLocaleString('en-US') + ' Km2'
+        
+        return {
+            foundGrids: turf.featureCollection([squarePolygon]),
+            totalFoundGrids: 1,
             gridAreaInSquareKm,
             gridWidthInKm
         }
