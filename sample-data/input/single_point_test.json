@@ -1,0 +1,24 @@
+[
+  {
+    "assessment_id": 158499741,
+    "id_no": 158456613,
+    "binomial": "Ilex aquifolium",
+    "presence": 1,
+    "origin": 1,
+    "seasonal": 1,
+    "compiler": "Test",
+    "year": 2024,
+    "citation": "Test Data",
+    "legend": "Extant (resident)",
+    "subspecies": "",
+    "subpop": "",
+    "dist_comm": "",
+    "island": "",
+    "tax_comm": "",
+    "source": "",
+    "basisofrec": "",
+    "event_year": 2024,
+    "longitude": -47.584853,
+    "latitude": -14.096598
+  }
+]

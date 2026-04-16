@@ -195,6 +195,12 @@ function _getInputFileContent(inputFile: string) {
         const inputFileExtention = inputFile.split('.').pop()
         if (inputFileExtention === 'csv') {
             output = await csv().fromFile(inputFile)
+
+            output = output.map((row: any) => ({
+                ...row,
+                longitude: Number(row.longitude),
+                latitude: Number(row.latitude)
+            }))
             resolve(output)
         } else {
             output = fs.readFileSync(inputFile)
